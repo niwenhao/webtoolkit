@@ -1,0 +1,1 @@
+electron.cmd build
