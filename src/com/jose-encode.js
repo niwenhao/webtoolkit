@@ -55,7 +55,27 @@ export class JOSEEncode extends Component {
             } else {
                 signRst = new Promise(r => r(payload))
             }
-            signRst.then(jwt => )
+            signRst.then(jwt => {
+                let encRst;
+                if (encKey.length >= 32) {
+                    let key = encKey.length === 32 ? Buffer.from(encKey) : Buffer.from(sha256(encKey, { asBytes: true }));
+
+                    encRst = new Promise((resolve, reject) => {
+                        json.JWK.asKey({
+                            kty: 'ock',
+                            k: b64u(key)
+                        }).then(ekey => {
+                            jose.JWE.createEncrypt({format: "compact"}, {
+                                
+                            })
+                        }).catch(reject)
+                    })
+
+                } else {
+                    encRst = new Promise(r => r(jwt))
+                }
+
+            })
         } catch (e) {
             ret.error = e.toString();
         }
