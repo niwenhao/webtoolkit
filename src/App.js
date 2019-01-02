@@ -32,8 +32,8 @@ class App extends Component {
                 <li><Link to="/">Home</Link></li>
                 <li><Link to="/url-decode">Decode a URL</Link></li>
                 <li><Link to="/json-format">Format a Json</Link></li>
-                <li><Link to="/encode-jose">Encode JOSE</Link></li>
-                <li><Link to="/decode-jose">Decode JOSE</Link></li>
+                <li><Link to="/encode-jose">Encode JOSE(In developing)</Link></li>
+                <li><Link to="/decode-jose">Decode JOSE(In developing)</Link></li>
               </ul>
             </nav>
             <div style={{

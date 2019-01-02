@@ -10,7 +10,7 @@ class JOSEDecode extends Component {
         payload: "",
         signKey: "6b1fb908-8a36-4a7c-9805-7ebd4010a7ac",
         signedJWT: "",
-        encryptKey: "6b1fb908-8a36-4a7c-9805-7ebd4010a7ac",
+        encryptKey: "",
         encryptedJWT: "",
         error: ""
     }
@@ -85,7 +85,7 @@ class JOSEDecode extends Component {
         });
 
         rst.then(jwt => {
-            ret.payload = jwt;
+            ret.payload = jwt.payload.toString();
             this.setState(ret);
         }, updateError);
     }
