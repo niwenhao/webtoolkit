@@ -1,16 +1,16 @@
 import React, { Component } from 'react'
 
 import sha256 from 'sha256';
-import json from 'node-jose';
+import jose from 'node-jose';
 import b64u from 'base64url';
-import { ReadStream } from 'fs';
+import './jose-encode.scss'
 
 export class JOSEEncode extends Component {
     state = {
         payload: "",
-        signKey: "",
+        signKey: "6b1fb908-8a36-4a7c-9805-7ebd4010a7ac",
         signedJWT: "",
-        encryptKey: "",
+        encryptKey: "6b1fb908-8a36-4a7c-9805-7ebd4010a7ac",
         encryptedJWT: "",
         error: ""
     }
@@ -35,56 +35,70 @@ export class JOSEEncode extends Component {
             encryptKey: encKey
         };
 
-        try {
-            let signRst;
-            if (signKey.length >= 32) {
-                let key = signKey.length === 32 ? Buffer.from(signKey) : Buffer.from(sha256(signKey, { asBytes: true }));
-                signRst = new Promise((resolve, reject) => {
-                    json.JWK.asKey({
-                        kty: 'oct',
-                        k: b64u(key)
-                    }).then((skey) => {
-                        jose.JWS.createSign({ format: "compact" },
-                            { key: skey, header: { alg: "HS256" } })
-                            .update(ret.payload)
-                            .final()
-                            .then(resolve)
-                            .catch(reject)
-                    }).catch(reject)
-                })
-            } else {
-                signRst = new Promise(r => r(payload))
-            }
-            signRst.then(jwt => {
-                let encRst;
-                if (encKey.length >= 32) {
-                    let key = encKey.length === 32 ? Buffer.from(encKey) : Buffer.from(sha256(encKey, { asBytes: true }));
-
-                    encRst = new Promise((resolve, reject) => {
-                        json.JWK.asKey({
-                            kty: 'ock',
-                            k: b64u(key)
-                        }).then(ekey => {
-                            jose.JWE.createEncrypt({format: "compact"}, {
-                                
-                            })
-                        }).catch(reject)
-                    })
-
-                } else {
-                    encRst = new Promise(r => r(jwt))
-                }
-
-            })
-        } catch (e) {
-            ret.error = e.toString();
+        const updateError = err => {
+            ret.error = err;
+            this.setState(ret)
         }
 
-        this.setState(ret);
+        updateError.bind(this)
+
+        let signRst;
+        if (signKey.length >= 32) {
+            let key = signKey.length === 32 ? Buffer.from(signKey) : Buffer.from(sha256(signKey, { asBytes: true }));
+            signRst = new Promise((resolve, reject) => {
+                jose.JWK.asKey({
+                    kty: 'oct',
+                    k: b64u(key)
+                }).then((skey) => {
+                    jose.JWS.createSign({ format: "compact" },
+                        { key: skey, header: { alg: "HS256" } })
+                        .update(ret.payload)
+                        .final()
+                        .then(resolve)
+                        .catch(reject)
+                }, reject)
+            })
+        } else {
+            signRst = new Promise(r => r(payload))
+        }
+        signRst.then(jwt => {
+            ret.signedJWT = jwt;
+            let encRst;
+            if (encKey.length >= 32) {
+                let key = encKey.length === 32 ? Buffer.from(encKey) : Buffer.from(sha256(encKey, { asBytes: true }));
+
+                encRst = new Promise((resolve, reject) => {
+                    jose.JWK.asKey({
+                        kty: 'oct',
+                        k: b64u(key)
+                    }).then(ekey => {
+                        jose.JWE.createEncrypt({
+                            format: 'compact',
+                        }, {
+                                header: {
+                                    alg: 'dir',
+                                    enc: 'A128CBC-HS256'
+                                },
+                                key: ekey
+                            })
+                            .update(jwt)
+                            .final().then(resolve).catch(reject)
+                    }, reject)
+                })
+
+            } else {
+                encRst = new Promise(r => r(jwt))
+            }
+            encRst.then(jwt => {
+                ret.encryptedJWT = jwt;
+                this.setState(ret);
+            }, updateError)
+
+        }, updateError)
     }
     render() {
         return (
-            <div>
+            <div className={"jose-encode"}>
                 <div className="error">{this.state.error}</div>
                 <table border="1">
                     <tbody>
@@ -94,7 +108,7 @@ export class JOSEEncode extends Component {
                         </tr>
                         <tr>
                             <td>Sign Key</td>
-                            <td><textarea value={this.state.signKey} onChange={(e) => this.updateSignKey(e.target.value)} /></td>
+                            <td><input type="text" value={this.state.signKey} onChange={(e) => this.updateSignKey(e.target.value)} /></td>
                         </tr>
                         <tr>
                             <td>Signed JWT</td>
@@ -102,7 +116,7 @@ export class JOSEEncode extends Component {
                         </tr>
                         <tr>
                             <td>Encrypt Key</td>
-                            <td><textarea value={this.state.encryptKey} onChange={(e) => this.updateEncryptKey(e.target.value)} /></td>
+                            <td><input type="text" value={this.state.encryptKey} onChange={(e) => this.updateEncryptKey(e.target.value)} /></td>
                         </tr>
                         <tr>
                             <td>Encrypted JWT</td>
