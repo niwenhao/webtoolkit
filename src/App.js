@@ -5,13 +5,23 @@ import JSONFormater from './com/json-formater'
 import JOSEEncode from './com/jose-encode'
 import JOSEDecode from './com/jose-decode'
 
+import leftmost, {LeftmostHalf} from './com/leftmost-half'
+
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom'
+
+import {createStore, combineReducers} from 'redux'
+import { Provider } from 'react-redux'
+
+const store = createStore(combineReducers({
+  [leftmost.stateKey]: leftmost.reducer
+}))
 
 const Home = () => <div></div>
 
 class App extends Component {
   render() {
     return (
+      <Provider store={store}>
         <Router>
           <div style={{
             width: "950px",
@@ -32,6 +42,7 @@ class App extends Component {
                 <li><Link to="/">Home</Link></li>
                 <li><Link to="/url-decode">Decode a URL</Link></li>
                 <li><Link to="/json-format">Format a Json</Link></li>
+                <li><Link to="/leftmost-sha256">SHA256-Leftmost</Link></li>
                 <li><Link to="/encode-jose">Encode JOSE(In developing)</Link></li>
                 <li><Link to="/decode-jose">Decode JOSE(In developing)</Link></li>
               </ul>
@@ -43,12 +54,14 @@ class App extends Component {
               <Route path='/' component={Home} />
               <Route path='/url-decode' component={URLDecoder} />
               <Route path='/json-format' component={JSONFormater} />
+              <Route path='/leftmost-sha256' component={LeftmostHalf} />
               <Route path='/encode-jose' component={JOSEEncode} />
               <Route path='/decode-jose' component={JOSEDecode} />
             </div>
           </div>
-
         </Router>
+
+      </Provider>
     );
   }
 }
