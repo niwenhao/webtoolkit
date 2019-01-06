@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
-import URLDecoder from './com/url-decoder'
-import JSONFormater from './com/json-formater'
+import urldec, { URLDecoder } from './com/url-decoder'
+import jsonfmt, { JSONFormater } from './com/json-formater'
 import JOSEEncode from './com/jose-encode'
 import JOSEDecode from './com/jose-decode'
 
@@ -13,7 +13,9 @@ import {createStore, combineReducers} from 'redux'
 import { Provider } from 'react-redux'
 
 const store = createStore(combineReducers({
-  [leftmost.stateKey]: leftmost.reducer
+  [leftmost.stateKey]: leftmost.reducer,
+  [urldec.stateKey]: urldec.reducer,
+  [jsonfmt.stateKey]: jsonfmt.reducer
 }))
 
 const Home = () => <div></div>
