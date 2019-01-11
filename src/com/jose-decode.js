@@ -8,9 +8,10 @@ import './jose-encode.scss'
 class JOSEDecode extends Component {
     state = {
         payload: "",
+        //signKey: "68c21043-d216-465b-8e75-aea043f1f5be",
         signKey: "6b1fb908-8a36-4a7c-9805-7ebd4010a7ac",
         signedJWT: "",
-        encryptKey: "",
+        encryptKey: "6b1fb908-8a36-4a7c-9805-7ebd4010a7ac",
         encryptedJWT: "",
         error: ""
     }
@@ -42,52 +43,57 @@ class JOSEDecode extends Component {
 
         updateError.bind(this)
 
-        let rst;
-        if (encKey.length >= 32) {
-            let key = encKey.length === 32 ? Buffer.from(encKey) : Buffer.from(sha256(encKey, { asBytes: true }));
+        try {
+            let rst;
+            if (encKey.length >= 32) {
+                let key = encKey.length === 32 ? Buffer.from(encKey) : Buffer.from(sha256(encKey, { asBytes: true }));
 
-            rst = new Promise((resolve, reject) => {
-                jose.JWK.asKey({
-                    kty: 'oct',
-                    k: b64u(key),
-                    alg: 'dir',
-                    enc: 'A128CBC-HS256'
-                }).then(ekey => {
-                    jose.JWE.createDecrypt(ekey)
-                        .decrypt(ret.encryptedJWT)
-                        .then(resolve, reject)
-                }, reject)
-            })
-        } else {
-            rst = new Promise(r => r(ret.encryptedJWT))
-        }
-
-        rst = rst.then(jwt => {
-            ret.signedJWT = jwt;
-            let signRst;
-            if (signKey.length >= 32) {
-                let key = signKey.length === 32 ? Buffer.from(signKey) : Buffer.from(sha256(signKey, { asBytes: true }));
-                signRst = new Promise((resolve, reject) => {
+                rst = new Promise((resolve, reject) => {
                     jose.JWK.asKey({
                         kty: 'oct',
                         k: b64u(key),
-                        alg: 'HS256'
-                    }).then((skey) => {
-                        jose.JWS.createVerify(skey)
-                            .verify(jwt)
+                        alg: 'dir',
+                        enc: 'A128CBC-HS256'
+                    }).then(ekey => {
+                        jose.JWE.createDecrypt(ekey)
+                            .decrypt(ret.encryptedJWT)
                             .then(resolve, reject)
                     }, reject)
                 })
             } else {
-                signRst = new Promise(r => r(jwt))
+                rst = new Promise(r => r(ret.encryptedJWT))
             }
-            return signRst;
-        });
 
-        rst.then(jwt => {
-            ret.payload = jwt.payload.toString();
-            this.setState(ret);
-        }, updateError);
+            rst = rst.then(jwt => {
+                console.log(jwt.plaintext.toString())
+                ret.signedJWT = jwt.plaintext.toString();
+                let signRst;
+                if (signKey.length >= 32) {
+                    let key = Buffer.from(signKey);
+                    signRst = new Promise((resolve, reject) => {
+                        jose.JWK.asKey({
+                            kty: 'oct',
+                            k: b64u(key),
+                            alg: 'HS256'
+                        }).then((skey) => {
+                            jose.JWS.createVerify(skey)
+                                .verify(jwt.plaintext.toString())
+                                .then(resolve, reject)
+                        }, reject)
+                    })
+                } else {
+                    signRst = new Promise(r => r(jwt))
+                }
+                return signRst;
+            });
+
+            rst.then(jwt => {
+                ret.payload = jwt.payload.toString();
+                this.setState(ret);
+            }, updateError);
+        } catch (err) {
+            updateError(err);
+        }
     }
 
     render() {

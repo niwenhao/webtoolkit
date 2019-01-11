@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 
+import { Map } from 'immutable';
+
 import sha256 from 'sha256';
 import jose from 'node-jose';
 import b64u from 'base64url';
@@ -44,7 +46,7 @@ export class JOSEEncode extends Component {
 
         let signRst;
         if (signKey.length >= 32) {
-            let key = signKey.length === 32 ? Buffer.from(signKey) : Buffer.from(sha256(signKey, { asBytes: true }));
+            let key = Buffer.from(signKey);
             signRst = new Promise((resolve, reject) => {
                 jose.JWK.asKey({
                     kty: 'oct',
@@ -62,6 +64,7 @@ export class JOSEEncode extends Component {
             signRst = new Promise(r => r(payload))
         }
         signRst.then(jwt => {
+            console.log("jwt = " + jwt)
             ret.signedJWT = jwt;
             let encRst;
             if (encKey.length >= 32) {
@@ -96,6 +99,7 @@ export class JOSEEncode extends Component {
 
         }, updateError)
     }
+
     render() {
         return (
             <div className={"jose-encode"}>
